@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\src",
+    "\\src\\Application",
+    "\\src\\Application\\Controllers",
+    "\\src\\Domain",
+    "\\src\\Domain\\Services"
+  ],
+  "SelectedNode": "\\src\\Domain\\Services\\UserService.php",
+  "PreviewInSolutionExplorer": false
+}
