@@ -15,7 +15,13 @@ class MediaTypeController extends Controller
     public function __construct(MediaTypeService $mediaTypeService) {
         $this->mediaTypeService = $mediaTypeService;
     }
-
+    
+    public function listTypes(Request $request): JsonResponse {
+        $filter = FilterMapper::fromRequestToEntity($request);
+        $res = $this->mediaTypeService->listResourceTypes($filter);
+        return response()->json($res->toArray());
+    }
+    
     public function fetch(Request $request): JsonResponse {
         $filter = FilterMapper::fromRequestToEntity($request);
         $res = $this->mediaTypeService->fetch($filter);

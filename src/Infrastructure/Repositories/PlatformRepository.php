@@ -147,4 +147,20 @@ class PlatformRepository implements IPlatformRepository {
             ]);
         return $this->findById($entity->getPlatformId());
     }
+
+    public function getSummary(): array {
+        $totalNotDeleted = DB::table($this->table)
+            ->where('deleted', false)
+            ->count();
+        
+        $totalActive = DB::table($this->table)
+            ->where('deleted', false)
+            ->where('available', true)
+            ->count();
+        
+        return [
+            'total' => $totalNotDeleted,
+            'active' => $totalActive
+        ];
+    }
 }

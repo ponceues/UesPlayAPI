@@ -18,6 +18,14 @@ class ResourceTypesController extends Controller {
         $this->resourceTypeService = $resourceTypeService;
     }
     
+    public function listResourceTypes(Request $request): JsonResponse {
+        $filter = FilterMapper::fromRequestToEntity($request);
+        
+        $res = $this->resourceTypeService->listResourceTypes($filter);
+        
+        return response()->json($res->toArray());
+    }
+    
     public function fetchResourceTypes(Request $request): JsonResponse {
         $filter = FilterMapper::fromRequestToEntity($request);
         

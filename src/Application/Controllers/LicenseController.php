@@ -18,7 +18,7 @@ class LicenseController extends Controller
         $this->licenseService = $licenseService;
     }
     
-    public function fetch(Request $request):JsonResponse{
+    public function listLicenses(Request $request):JsonResponse{
         $filter = FilterMapper::fromRequestToEntity($request);
         $res = $this->licenseService->fetch($filter);
         
@@ -50,6 +50,11 @@ class LicenseController extends Controller
     public function delete(Request $request, string $licenceId):JsonResponse{
         $res = $this->licenseService->trash($licenceId);
         
+        return response()->json($res);
+    }
+    
+    public function fetchSummary():JsonResponse{
+        $res = $this->licenseService->summaryLicenses();        
         return response()->json($res);
     }
     

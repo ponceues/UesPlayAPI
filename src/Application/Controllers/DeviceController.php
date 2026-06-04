@@ -19,10 +19,10 @@ class DeviceController extends Controller {
         $this->deviceService = $deviceService;
     }
 
-    public  function fetchDevices(Request $request):JsonResponse{
+    public  function listDevices(Request $request):JsonResponse{
         $filter = FilterMapper::fromRequestToEntity($request);
         
-        $res = $this->deviceService->fetchDevices($filter);
+        $res = $this->deviceService->listDevices($filter);
         return response()->json($res->toArray());
     }
     
@@ -55,4 +55,10 @@ class DeviceController extends Controller {
         $res = $this->deviceService->findDevice($deviceId);
         return response()->json($res->toArray());
     }
+    
+    public  function fetchSummary():JsonResponse{
+        $res = $this->deviceService->summaryDevices(); 
+        return response()->json($res);
+    }
+    
 }

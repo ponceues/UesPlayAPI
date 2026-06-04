@@ -13,7 +13,8 @@ class Resource implements Arrayable {
     private string $stateId;
     private string $title;
     private string $description;
-    private int $downloads;    
+    private int $downloads;   
+    private float $rating;
     private DateTime $createdAt;
     private DateTime $updatedAt;
     private Collection $files;
@@ -26,6 +27,8 @@ class Resource implements Arrayable {
     private ?User $user;
     private ?Version $version;
     
+
+
     public function __construct() {
         $this->dowloadsCount = 0;
         $this->creator = null;
@@ -36,6 +39,7 @@ class Resource implements Arrayable {
         $this->user = null;
         $this->files = collect();
         $this->version = null;
+        $this->rating = 0.0;
     }
     
     public function getResourceId(): string {
@@ -186,7 +190,19 @@ class Resource implements Arrayable {
         $this->version = $version;
     }
     
-
+    public function getRating(): float
+    {
+        return $this->rating;
+    }
+    
+    public function setRating(float $rating): self
+    {
+        $this->rating = $rating;
+        
+        return $this;
+    }
+    
+    
     public function toArray(): array {
         return [
             'resourceId'=>$this->getResourceId(),
@@ -203,6 +219,7 @@ class Resource implements Arrayable {
             'state'=>$this->getState()?->toArray(),
             'authors'=>$this->getAuthors()->toArray(),
             'files'=>$this->getFiles()->toArray(),
+            'rating'=>$this->getRating(),
             'version'=>$this->getVersion() == null ? null : $this->getVersion()->toArray(),
             'createdAt'=>$this->getCreatedAt()->format('Y-m-d H:i:s'),
             'updatedAt'=>$this->getUpdatedAt()->format('Y-m-d H:i:s'),

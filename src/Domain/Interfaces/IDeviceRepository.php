@@ -75,4 +75,10 @@ interface IDeviceRepository {
      */
     function delete(string $deviceId):bool;
     
+    /**
+     * <b> Obtiene un resumen de los dispositivos (total no eliminados y activos) </b>
+     * @return array
+     */
+    function getSummary():array;
+    
 }

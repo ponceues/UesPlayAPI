@@ -15,6 +15,12 @@ class MediaGenreController extends Controller
     public function __construct(MediaGenreService $mediaGenreService) {
         $this->mediaGenreService = $mediaGenreService;
     }
+    
+    public function listGenres(Request $request): JsonResponse {
+        $filter = FilterMapper::fromRequestToEntity($request);
+        $res = $this->mediaGenreService->listGenres($filter);
+        return response()->json($res->toArray());
+    }
 
     public function fetch(Request $request): JsonResponse {
         $filter = FilterMapper::fromRequestToEntity($request);

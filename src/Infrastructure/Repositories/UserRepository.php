@@ -227,6 +227,19 @@ class UserRepository implements IUserRepository {
             }
         return $raw;
     }
+    public function verfifyAccountStep(string $identity, string $verifyCode, string $step): ?User
+    {
+        $raw = DB::table($this->table)
+                    ->where('user_id',$identity)
+                    ->where('verify_code',$verifyCode)
+                    ->where('verify_mode',$step)
+                    ->first();
+        if($raw === null){
+            return null;
+        }
+        return UserMapper::fromRawToEntity($raw);
+    }
+
 
 
 

@@ -52,6 +52,12 @@ class UserController extends Controller {
         
         return response()->download($res)->deleteFileAfterSend(true);
     }
+    public function usersSummary(Request $request){
+        
+        $res = $this->userService->usersSummary();
+        
+        return response()->json($res);
+    }
     
     public function processBulkFile(Request $request):JsonResponse{
         $validate = Validator::make(

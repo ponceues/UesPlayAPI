@@ -16,6 +16,23 @@ class LanguageService
         $this->languageRepository = $languageRepository;
     }
     
+    public function listLanguages(Filter $filter):Envelop
+    {
+        try {
+            $res = new Envelop();
+            $filter->setEnabled(true);
+            $languages = $this->languageRepository->fetch($filter);
+            $count = $this->languageRepository->count($filter);
+            
+            $res->setData($languages, $filter, $count, 'languages');
+            
+            return $res;
+        } catch (Exception $e) {
+            throw new InternalErrorException('Ha ocurrido un error inesperado.');
+        }
+        
+    }
+    
     public function fetch(Filter $filter):Envelop
     {
         try {

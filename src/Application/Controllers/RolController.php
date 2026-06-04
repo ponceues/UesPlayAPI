@@ -77,6 +77,11 @@ class RolController extends Controller {
     public function addPermission(string $rolId,string $permissionId):JsonResponse{
         $result = $this->rolService->addPermissionToRol($rolId, $permissionId);
         return response()->json(['estado'=>$result]);
-    }    
+    }
+    
+    public function rolesSummary():JsonResponse{
+        $result = $this->rolService->getRolSummary();
+        return response()->json($result);
+    }
     
 }

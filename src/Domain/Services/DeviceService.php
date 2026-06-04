@@ -21,6 +21,21 @@ class DeviceService {
         $this->deviceRepository = $deviceRepository;
     }
     
+    public function listDevices(Filter $filter):Envelop{
+        try{
+            $result = new Envelop();
+            $filter->setActive(true);
+            $filter->setAvailable(true);
+            $count = $this->deviceRepository->countByFilter($filter);
+            $devices = $this->deviceRepository->fetchByFilter($filter);
+            
+            $result->setData($devices, $filter, $count, "devices");
+            return $result;
+        } catch (Exception) {
+            throw new InternalErrorException("Ha ocurrido un error inesperado.");
+        }
+    }
+    
     public function createDevice(Device $device):Device{
         try{
             $exist=$this->deviceRepository->findByName($device->getName());
@@ -116,6 +131,19 @@ class DeviceService {
             ];
         }
         catch (Exception $ex) {
+            throw new InternalErrorException("Ha ocurrido un error inesperado.");
+        }
+    }
+    
+    public function summaryDevices():array{
+        try{
+            $summary = $this->deviceRepository->getSummary();
+            return [
+                'entity' => 'Dispositivos',
+                'total' => $summary['total'],
+                'active' => $summary['active']
+            ];
+        } catch (Exception) {
             throw new InternalErrorException("Ha ocurrido un error inesperado.");
         }
     }

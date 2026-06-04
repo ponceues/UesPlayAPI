@@ -16,6 +16,14 @@ class LanguageController extends Controller
         $this->languageService = $languageService;
     }
     
+    public function listLanguages(Request $request): JsonResponse
+    {
+        $filter = FilterMapper::fromRequestToEntity($request);
+        
+        $res = $this->languageService->listLanguages($filter);
+        return response()->json($res->toArray());
+    }
+    
     public function fetch(Request $request): JsonResponse
     {
         $filter = FilterMapper::fromRequestToEntity($request);

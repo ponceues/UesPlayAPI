@@ -19,6 +19,21 @@ class MediaTypeService
     public function __construct(IMediaTypeRepository $mediaTypeRepository) {
         $this->mediaTypeRepository = $mediaTypeRepository;
     }
+    
+    public function listResourceTypes(Filter $filter): Envelop {
+        try {
+            $envelop = new Envelop();
+            $filter->setEnabled(true);
+            $data = $this->mediaTypeRepository->search($filter);
+            $count = $this->mediaTypeRepository->count($filter);
+            $envelop->setData($data, $filter, $count, 'mediaTypes');
+            return $envelop;
+        } catch (Exception $ex) {
+
+            echo $ex;
+            throw new InternalErrorException("Ha ocurrido un error inesperado");
+        }
+    }
 
     public function search(Filter $filter): Envelop {
         try {

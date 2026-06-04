@@ -51,4 +51,10 @@ interface IPlatformRepository {
      */
     function delete(string $platformId): bool;
     
+    /**
+     * <b> Obtiene un resumen de las plataformas (total no eliminadas y activas) </b>
+     * @return array
+     */
+    function getSummary(): array;
+    
 }

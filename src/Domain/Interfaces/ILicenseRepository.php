@@ -15,5 +15,6 @@ interface ILicenseRepository
     function insert(License $licence):License;
     function update(License $licence):License;
     function delete(string $licenceId):bool;
+    function getSummary():array;
 }
 

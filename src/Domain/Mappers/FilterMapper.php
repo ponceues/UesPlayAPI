@@ -34,8 +34,6 @@ class FilterMapper {
         $entity->setStateId($request->has('stateId')? $request->string('stateId'): null);
         $entity->setAreaId($request->has('areaId')? $request->string('areaId'): null);
         $entity->setEnabled($request->has('enabled') ? $request->boolean('enabled'): null);
-        
-        
         return $entity;
     }
     

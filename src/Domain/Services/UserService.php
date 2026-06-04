@@ -355,4 +355,26 @@ class UserService {
             throw new InternalErrorException("Ha ocurrido un error inesperado");
         }
     }
+    
+    public function usersSummary():array{
+        try{
+            // Filter for total users
+            $filterTotal = new Filter();
+            $total = $this->userRepository->countByFilter($filterTotal);
+            
+            // Get active state and filter for active users
+            $activeState = $this->stateRepository->findByCode('ACTIVE');
+            $filterActive = new Filter();
+            $filterActive->setStateId($activeState->getStateId());
+            $active = $this->userRepository->countByFilter($filterActive);
+            
+            return [
+                'entity' => 'Usuarios',
+                'total' => $total,
+                'active' => $active
+            ];
+        } catch (Exception $ex) {
+            throw new InternalErrorException($ex->getMessage());
+        }
+    }
 }
