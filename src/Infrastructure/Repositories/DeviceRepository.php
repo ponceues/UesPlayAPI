@@ -126,4 +126,20 @@ class DeviceRepository implements IDeviceRepository {
                 ->count();
         return $count;
     }
+    
+    public function getSummary(): array {
+        $totalNotDeleted = DB::table($this->table)
+            ->where('deleted', false)
+            ->count();
+        
+        $totalActive = DB::table($this->table)
+            ->where('deleted', false)
+            ->where('active', true)
+            ->count();
+        
+        return [
+            'total' => $totalNotDeleted,
+            'active' => $totalActive
+        ];
+    }
 }

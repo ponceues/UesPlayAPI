@@ -210,5 +210,28 @@ class RolService {
         }catch (Exception $ex) {
             throw new InternalErrorException($ex->getMessage());
         }
-    }    
+    }
+    
+    public function getRolSummary():array{
+        try{
+            // Filter for total roles (excluding deleted)
+            $filterTotal = new Filter();
+            $filterTotal->setAvailable(true);
+            $total = $this->rolRepository->countByFilter($filterTotal);
+            
+            // Filter for active roles (excluding deleted)
+            $filterActive = new Filter();
+            $filterActive->setAvailable(true);
+            $filterActive->setActive('1');
+            $active = $this->rolRepository->countByFilter($filterActive);
+            
+            return [
+                'entity' => 'Roles',
+                'total' => $total,
+                'active' => $active
+            ];
+        } catch (Exception $ex) {
+            throw new InternalErrorException($ex->getMessage());
+        }
+    }
 }

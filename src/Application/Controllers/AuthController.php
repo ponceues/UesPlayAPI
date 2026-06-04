@@ -41,6 +41,24 @@ class AuthController extends Controller {
         return response()->json($res);
     }
     
+    public function refreshToken(Request $request): JsonResponse {
+        $validationResult = Validator::make(
+            $request->all(), 
+            [
+                'refresh_token' => 'required|string',
+            ]
+        );
+        
+        if($validationResult->invalid()){
+          throw new   BadRequestException($validationResult->errors()->first());
+        }
+        
+        $refreshToken = $request->string('refresh_token');
+        $res = $this->authService->refreshJwtToken($refreshToken);
+        
+        return response()->json($res);
+    }
+    
     public function getUsersSettings():JsonResponse{
         $res= $this->authService->getUserInformation();
         return response()->json($res);
@@ -113,4 +131,26 @@ class AuthController extends Controller {
         return response()->json($res);
     }
     
+    public function resetPassword(Request $request): JsonResponse {
+        $validationResult = Validator::make(
+            $request->all(),
+                [
+                    'identity' => 'required|string',
+                    'code'=>'required|string',
+                    'password'=>'required|string|confirmed'
+                    
+                ]
+            );
+        
+        $identity = $request->string('identity');
+        $code = $request->string('code');
+        $password = $request->string('password');
+        
+        if($validationResult->invalid()){
+            throw new   BadRequestException($validationResult->errors()->first());
+        }
+        
+        $res = $this->authService->resetPassword($identity, $code, $password);
+        return response()->json($res);
+    }
 }

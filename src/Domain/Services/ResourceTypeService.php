@@ -21,6 +21,22 @@ class ResourceTypeService {
         $this->typeRepository = $typeRepository;
     }
 
+    public function listResourceTypes(Filter $filter):Envelop {
+        try {
+            $result = new Envelop();
+            $filter->setActive(true);
+            $count = $this->typeRepository->countByFilter($filter);
+            $resourceTypes = $this->typeRepository->fetchByFilter($filter);
+            
+            $result->setData($resourceTypes, $filter, $count,'types');
+            return $result;
+        }
+        catch (Exception $ex) {
+            dd($ex);
+            throw new InternalErrorException("Ha ocurrido un error inesperado.");
+        }
+    }
+    
     public function createResourceType(ResourceType $entity): ResourceType{
         try {
             $count = $this->typeRepository->countForCreate($entity);

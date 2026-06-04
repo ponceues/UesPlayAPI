@@ -111,5 +111,18 @@ class LicenseService
             throw new InternalErrorException("Ha ocurrido un error inesperado");
         }
     }
+    
+    public function summaryLicenses():array{
+        try{
+            $summary = $this->licenseRepository->getSummary();
+            return [
+                'entity' => 'Licencias',
+                'total' => $summary['total'],
+                'active' => $summary['active']
+            ];
+        } catch (Exception) {
+            throw new InternalErrorException("Ha ocurrido un error inesperado");
+        }
+    }
 }
 

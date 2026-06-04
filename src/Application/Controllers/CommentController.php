@@ -17,6 +17,13 @@ class CommentController extends Controller
     {
         $this->commentService = $commentService;
     }
+    
+    public function listComments(Request $request, string $resourceId): JsonResponse
+    {
+        $filter = FilterMapper::fromRequestToEntity($request);
+        $env = $this->commentService->search($filter, $resourceId);
+        return response()->json($env->toArray());
+    }
 
     public function search(Request $request, string $resourceId): JsonResponse
     {

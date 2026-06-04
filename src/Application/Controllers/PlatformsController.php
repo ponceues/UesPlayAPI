@@ -17,6 +17,13 @@ class PlatformsController extends Controller {
         $this->platformService = $platformService;
     }
 
+    public  function listPlatforms(Request $request):JsonResponse{
+        $filter = FilterMapper::fromRequestToEntity($request);
+        
+        $res = $this->platformService->listPlatforms($filter);
+        return response()->json($res->toArray());
+    }
+    
     public  function fetchPlatforms(Request $request):JsonResponse{
         $filter = FilterMapper::fromRequestToEntity($request);
         
@@ -53,8 +60,14 @@ class PlatformsController extends Controller {
     
     public  function delete(string $platformId):JsonResponse{
        
-        
         $res = $this->platformService->delete($platformId);
         return response()->json($res);
     }    
+    
+    public  function fetchSummary():JsonResponse{
+        
+        $res = $this->platformService->summaryPlatforms();
+        return response()->json($res);
+    } 
+    
 }

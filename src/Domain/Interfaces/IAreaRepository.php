@@ -21,5 +21,7 @@ interface IAreaRepository {
     function fetchFullByUser(string $userId):Collection;
     function insert(Area $area):Area;
     function update(Area $area):Area;
+    function countTotal():int;
+    function countActive():int;
     
 }

@@ -19,6 +19,20 @@ class MediaGenreService
     public function __construct(IMediaGenreRepository $mediaGenreRepository) {
         $this->mediaGenreRepository = $mediaGenreRepository;
     }
+    
+    public function listGenres(Filter $filter): Envelop {
+        try {
+            $envelop = new Envelop();
+            $filter->setEnabled(true);
+            
+            $data = $this->mediaGenreRepository->search($filter);
+            $count = $this->mediaGenreRepository->count($filter);
+            $envelop->setData($data, $filter, $count, 'mediaGenres');
+            return $envelop;
+        } catch (Exception $ex) {
+            throw new InternalErrorException("Ha ocurrido un error inesperado");
+        }
+    }
 
     public function search(Filter $filter, string $mediaTypeId): Envelop {
         try {

@@ -51,6 +51,10 @@ class AreaRepository implements IAreaRepository {
         $query =  DB::table($this->table)
                     ->where('deleted',false);
         
+        if($filter->getCode() !== null){
+            $query->where('code', $filter->getCode());
+        }
+        
         if($filter->getText() !== null){
              $query = $query->whereAny([
                 'name'
@@ -115,6 +119,11 @@ class AreaRepository implements IAreaRepository {
         if($filter->getName() !== null){
             $query->where('name', $filter->getName());
         }
+        
+        if($filter->getAvailable() !== null){
+            $query = $query->where('active',$filter->getAvailable());
+        }
+        
         return $query->count();
     }
 
@@ -153,6 +162,19 @@ class AreaRepository implements IAreaRepository {
         ->get();
         
         return AreaMapper::fromRawToCollection($raw);
+    }
+
+    public function countTotal(): int {
+        return DB::table($this->table)
+                ->where('deleted', false)
+                ->count();
+    }
+
+    public function countActive(): int {
+        return DB::table($this->table)
+                ->where('deleted', false)
+                ->where('active', true)
+                ->count();
     }
 
 }

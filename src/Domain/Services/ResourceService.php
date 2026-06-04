@@ -12,6 +12,7 @@ use UesPlay\Domain\Entities\Resource;
 use UesPlay\Domain\Entities\ResourceFile;
 use UesPlay\Domain\Entities\ResourceState;
 use UesPlay\Domain\Entities\ResourceType;
+use UesPlay\Domain\Entities\Comment;
 use UesPlay\Domain\Exceptions\BadRequestException;
 use UesPlay\Domain\Exceptions\InternalErrorException;
 use UesPlay\Domain\Exceptions\NotFoundException;
@@ -33,6 +34,7 @@ use UesPlay\Domain\Interfaces\IVersionDeviceRepository;
 use UesPlay\Domain\Interfaces\IVersionLangsRepository;
 use UesPlay\Domain\Interfaces\IVersionPlatformRepository;
 use UesPlay\Domain\Interfaces\IVersionRepository;
+use UesPlay\Domain\Interfaces\ICommentRepository;
 use Exception;
 
 class ResourceService {
@@ -52,6 +54,7 @@ class ResourceService {
     private readonly IVersionLangsRepository $versionLangsRepository;
     private readonly IVersionPlatformRepository $versionPlatformRepository;
     private readonly ILicenseRepository $licenceRepository;
+    private readonly ICommentRepository $commentRepository;
 
     public function __construct(
             IResourceRepository $resourceRepository,
@@ -66,7 +69,8 @@ class ResourceService {
             IVersionDeviceRepository $versionDeviceRepository,
             IVersionLangsRepository $versionLangsRepository,
             IVersionPlatformRepository $versionPlatformRepository,
-            ILicenseRepository $licenceRepository
+            ILicenseRepository $licenceRepository,
+            ICommentRepository $commentRepository,
         ) {
         $this->resourceRepository = $resourceRepository;
         $this->resourceStateRepository = $resourceStateRepository;
@@ -81,94 +85,84 @@ class ResourceService {
         $this->versionLangsRepository = $versionLangsRepository;
         $this->versionPlatformRepository = $versionPlatformRepository;
         $this->licenceRepository = $licenceRepository;
+        $this->commentRepository = $commentRepository;
     }
 
-    /**
-     * Obtiene la URL del archivo según el disco configurado (local o S3)
-     */
+
     private function getFileUrl(string $path): string {
 
         return Storage::disk('s3')->url($path);
 
     }
-
-    public function fetchForView(Filter $filter):Envelop{
+    
+    
+    public function listResources(Filter $filter):Envelop{
         try{
             $res = new Envelop();
-            if($filter->getTypeId() === null){
-                throw new BadRequestException('El tipo de recurso es obligatorio');
-            }
+            
+            $defaultFilter = new Filter();
+            $defaultFilter->setPageSize(1000);
+            
+            $states = $this->resourceStateRepository->fetch($defaultFilter);
 
-            $publishState = $this->resourceStateRepository->findByCode('PUBLISHED');
-            $type = $this->resourceTypeRepository->findById($filter->getTypeId());
-
+            
+            $publishState = $states->firstOrFail(function (ResourceState $state){
+                return $state->getCode() === 'PUBLISHED';
+            });
+            
             $filter->setStateId($publishState->getStateId());
             $count= $this->resourceRepository->countByFilter($filter);
             $resources = $this->resourceRepository->fetchByFilter($filter);
-
-            $defaultFilter = new Filter();
-            $defaultFilter->setPageSize(100);
-
+            
             $areas = $this->areaRepository->fetchByFilter($defaultFilter);
-            //$types = $this->resourceTypeRepository->fetchByFilter($defaultFilter);
-
-            $resources->each(function (Resource $resource, $key) use (&$resources, $areas, $publishState, $type, $filter){
-
-                if($filter->getDeviceId() !== null){
-                    $lastVersion = $this->versionRepository->findLastByResource($resource->getResourceId());
-                    $devices = $this->versionDeviceRepository->fetchForVersion($lastVersion->getVersionId(), new Filter());
-                    $device = $devices->first(function ($device) use ($filter){
-                        return $device->getDeviceId() === $filter->getDeviceId();
-                    });
-                    if($device === null){
-                        $resources->forget($key);
-                        return;
-                    }
-                }
-
-                if($filter->getPlatformId() !== null){
-                    $lastVersion = $this->versionRepository->findLastByResource($resource->getResourceId());
-                    $platforms = $this->versionPlatformRepository->fetchByVersion($lastVersion->getVersionId(), new Filter());
-                    $platform = $platforms->first(function ($platform) use ($filter){
-                        return $platform->getPlatformId() === $filter->getPlatformId();
-                    });
-                        if($platform === null){
-                            $resources->forget($key);
-                            return;
-                        }
-                }
-
-
-
-
-                $quickFilter = new Filter();
-                $quickFilter->setPageSize(100);
-
-                $resource->setState($publishState);
-                $resource->setType($type);
-                $resource->setFiles($this->resourceFileRepository->fetch($quickFilter, $resource->getResourceId()));
-
+            $types = $this->resourceTypeRepository->fetchByFilter($defaultFilter);
+            
+            
+            $resources->each(function (Resource $resource) use ($areas,$types, $states, $defaultFilter){
+                $filterState = $states->firstOrFail(function (ResourceState $state) use ($resource){
+                    return $state->getStateId() === $resource->getStateId();
+                });
+                $resource->setState($filterState);
+                
+                $resourceFiles = $this->resourceFileRepository->fetch($defaultFilter, $resource->getResourceId());
+                $filterType = $types->firstOrFail(function (ResourceType $type) use ($resource){
+                    return $type->getTypeId() === $resource->getTypeId();
+                });
+                $resource->setType($filterType);
+                    
                 if($resource->getAreaId() !== null){
-                    $filterArea = $areas->firstOrFail(function (Area $area) use ($resource){
+                    $filterArea = $areas->first(function (Area $area) use ($resource){
                         return $area->getAreaId() === $resource->getAreaId();
                     });
-                        $resource->setArea($filterArea);
+                    
+                    $resource->setArea($filterArea);
+                    $resourceFiles->each(function (ResourceFile $file) use ($resource, $filterArea){
+                        $path = "resources/{$filterArea->getCode()}/{$resource->getResourceId()}/files/{$file->getName()}";
+                        $file->setUrl($this->getFileUrl($path));
+                    });
+                    $resource->setFiles($resourceFiles);
                 }
-
-                $resource->getFiles()->each(function (ResourceFile $file) use ($resource){
-                    $file->setUrl($this->getFileUrl($file->getPath()));
+                
+                $filterComments = new Filter();
+                $filterComments->setPageSize(10000);
+                $filterComments->setStatus('PUBLISHED');
+                $comments = $this->commentRepository->search($filterComments,$resource->getResourceId());
+                $sum = $comments->sum(function (Comment $comment){
+                    return $comment->getScore();
                 });
-
+                
+                $resource->setRating($comments->count() > 0 ? $sum/$comments->count() : 0);                    
             });
-
+            
+            
             $res->setData($resources, $filter, $count,'resources');
-
+            
             return $res;
         } catch (Exception $ex) {
             throw new InternalErrorException('Ha ocurrido un error inesperado.');
         }
     }
-
+    
     public function findForView(string $resourceId):Resource {
         try{
             $filter = new Filter();
@@ -190,8 +184,7 @@ class ResourceService {
                 $path = "resources/{$area->getCode()}/{$resource->getResourceId()}/files/{$file->getName()}";
                 $file->setUrl($this->getFileUrl($path));
             });
-
-
+            
             $resource->setVersion($lastVersion);
             $resource->setAuthors($authors);
             $resource->setFiles($files);
@@ -262,18 +255,18 @@ class ResourceService {
             $states = $this->resourceStateRepository->fetch($defaultFilter);
 
             $resources->each(function (Resource $resource) use ($areas,$types, $states){
-                $filterState = $states->firstOrFail(function (ResourceState $state) use ($resource){
+                $filterState = $states->first(function (ResourceState $state) use ($resource){
                     return $state->getStateId() === $resource->getStateId();
                 });
                 $resource->setState($filterState);
 
-                $filterType = $types->firstOrFail(function (ResourceType $type) use ($resource){
+                $filterType = $types->first(function (ResourceType $type) use ($resource){
                     return $type->getTypeId() === $resource->getTypeId();
                 });
                 $resource->setType($filterType);
 
                 if($resource->getAreaId() !== null){
-                    $filterArea = $areas->firstOrFail(function (Area $area) use ($resource){
+                    $filterArea = $areas->first(function (Area $area) use ($resource){
                        return $area->getAreaId() === $resource->getAreaId();
                     });
                 $resource->setArea($filterArea);

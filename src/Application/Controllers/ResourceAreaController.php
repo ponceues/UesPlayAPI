@@ -19,6 +19,19 @@ class ResourceAreaController extends Controller {
         $this->areaService = $areaService;
     }
     
+    public function createArea(Request $request):JsonResponse{
+        $area = AreaMapper::fromRequestToEntity($request, false);
+        $res = $this->areaService->createArea($area);
+        
+        return response()->json($res->toArray());
+    }
+    
+    public function areasSummary():JsonResponse{
+        $res = $this->areaService->getAreasCount();
+        
+        return response()->json($res);
+    }
+    
     public function fetchForView(Request $request): JsonResponse {
         $filter = FilterMapper::fromRequestToEntity($request);
         
@@ -29,18 +42,11 @@ class ResourceAreaController extends Controller {
     
     public function fetchAreas(Request $request): JsonResponse {
         $filter = FilterMapper::fromRequestToEntity($request);
-        
         $res = $this->areaService->fetchByFilter($filter);
         
         return response()->json($res->toArray());
     }
     
-    public function createArea(Request $request):JsonResponse{
-        $area = AreaMapper::fromRequestToEntity($request, false);
-        $res = $this->areaService->createArea($area);
-        
-        return response()->json($res->toArray());
-    }
     
     public function updateArea(Request $request):JsonResponse{
         $area = AreaMapper::fromRequestToEntity($request, true);
@@ -52,4 +58,6 @@ class ResourceAreaController extends Controller {
         $res = $this->areaService->deleteArea($areaId);
         return response()->json(['estado'=>$res]);
     }
+    
+    
 }

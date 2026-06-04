@@ -20,6 +20,21 @@ class PlatformService {
         $this->platformRepository = $platformRepository;
     }
     
+    public function listPlatforms(Filter $filter):Envelop{
+        try{
+            $result = new Envelop();
+            $filter->setAvailable(true);
+            
+            $count = $this->platformRepository->count($filter);
+            $platforms = $this->platformRepository->fetch($filter);
+            
+            $result->setData($platforms, $filter, $count, "platforms");
+            return $result;
+        } catch (Exception) {
+            throw new InternalErrorException("Ha ocurrido un error inesperado.");
+        }
+    }
+    
     public function create(Platform $entity):Platform{
         try{
             $current = $this->platformRepository->findByName($entity->getName());
@@ -112,6 +127,19 @@ class PlatformService {
         }
         catch (Exception $ex) {
             dd($ex);
+            throw new InternalErrorException("Ha ocurrido un error inesperado.");
+        }
+    }
+    
+    public function summaryPlatforms():array{
+        try{
+            $summary = $this->platformRepository->getSummary();
+            return [
+                'entity' => 'Plataformas',
+                'total' => $summary['total'],
+                'active' => $summary['active']
+            ];
+        } catch (Exception) {
             throw new InternalErrorException("Ha ocurrido un error inesperado.");
         }
     }

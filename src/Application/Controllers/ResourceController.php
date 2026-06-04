@@ -19,6 +19,14 @@ class ResourceController extends Controller
         $this->resourceService = $resourceService;
     }
     
+    public function listResources(Request $request):JsonResponse
+    {
+        $filter = FilterMapper::fromRequestToEntity($request);
+        
+        $env = $this->resourceService->listResources($filter);
+        return response()->json($env->toArray());
+    }
+    
     public function search(Request $request):JsonResponse
     {
         $filter = FilterMapper::fromRequestToEntity($request);
@@ -33,8 +41,7 @@ class ResourceController extends Controller
         
         return response()->json($res->toArray());
     }
-    
-    
+
     public function fetch(Request $request):JsonResponse
     {
         $filter = FilterMapper::fromRequestToEntity($request);
@@ -73,8 +80,7 @@ class ResourceController extends Controller
         
         return response()->json($res->toArray());
     }
-    
-    
+        
     public function addAuthor(Request $request, string $resourceId):JsonResponse
     {
         $author = AuthorMapper::fromRequestToEntity($request, false);
@@ -122,5 +128,4 @@ class ResourceController extends Controller
         return response()->json(['result' => 'true']);
     }
 
-    
 }

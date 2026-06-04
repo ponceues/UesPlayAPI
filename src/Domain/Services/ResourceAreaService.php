@@ -47,7 +47,6 @@ class ResourceAreaService {
     public function fetchByFilter(Filter $filter):Envelop{
         try {
             $res = new Envelop();
-            $filter->setAvailable(true);
             $data = $this->areaRepository->fetchByFilter($filter);
             $count = $this->areaRepository->countByFilter($filter);
             $res->setData($data, $filter, $count,'areas');
@@ -61,6 +60,7 @@ class ResourceAreaService {
         try {
             $res = new Envelop();
             
+            $filter->setAvailable(true);
             $data = $this->areaRepository->fetchByFilter($filter);
             $count = $this->areaRepository->countByFilter($filter);
             $res->setData($data, $filter, $count,'areas');
@@ -89,6 +89,21 @@ class ResourceAreaService {
         try{
             $res = $this->areaRepository->delete($areaId);
             return $res;
+        } catch (Exception) {
+            throw new InternalErrorException("Ha ocuurrido un error inesperado.");
+        }
+    }
+
+    public function getAreasCount(): array {
+        try {            
+            $total = $this->areaRepository->countTotal();
+            $active = $this->areaRepository->countActive();
+            
+            return [
+                'entity' => 'area',
+                'total' => $total,
+                'active' => $active
+            ];
         } catch (Exception) {
             throw new InternalErrorException("Ha ocuurrido un error inesperado.");
         }

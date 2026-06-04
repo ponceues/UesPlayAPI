@@ -49,21 +49,64 @@ class AuthService {
                 if ($user) {
                     $state = $this->userStatesRepository->findById($user->getStateId());
                     if ($state && $state->getCode() !== 'ACTIVE') {
-                        throw new BadRequestException("Not authorized.");
+                        throw new BadRequestException("Credenciales incorrectas. Intenta nuevamente.");
                     }
-                    throw new BadRequestException("Not authorized.");
+                    throw new BadRequestException("Credenciales incorrectas. Intenta nuevamente.");
                 }
-                throw new BadRequestException("Not authorized.");
+                throw new BadRequestException("Credenciales incorrectas. Intenta nuevamente.");
             }
+            
+            // Generar refresh token con el TTL configurado en .env
+            $refreshTTL = (int) env('JWT_REFRESH_TTL', 360); // 6 horas por defecto
+            $refreshToken = auth()->claims(['type' => 'refresh'])->setTTL($refreshTTL)->tokenById(auth()->user()->getAuthIdentifier());
             
             return [
                 'username'=>auth()->user()->name,  
-                'token'=>$token
+                'token'=>$token,
+                'refreshToken'=>$refreshToken
             ];
         } catch (BadRequestException $ex) {
             throw $ex;
         } catch (Exception $ex) {
             throw new InternalErrorException("Ha ocurrido un error inesperado");
+        }
+    }
+    
+    public function refreshJwtToken(string $refreshToken): array{
+        try{
+            // Establecer el refresh token para validarlo
+            auth()->setToken($refreshToken);
+            
+            // Verificar que el token sea válido
+            $payload = auth()->getPayload();
+            
+            // Verificar que sea un refresh token
+            if (!$payload->get('type') || $payload->get('type') !== 'refresh') {
+                throw new BadRequestException("Token inválido. Se requiere un refresh token.");
+            }
+            
+            // Obtener el ID del usuario desde el payload
+            $userId = $payload->get('sub');
+            
+            // Verificar que el usuario existe y sigue activo
+            $user = $this->userRepository->findById($userId);
+            
+            $state = $this->userStatesRepository->findById($user->getStateId());
+            if (!$state || $state->getCode() !== 'ACTIVE') {
+                throw new BadRequestException("Usuario no activo.");
+            }
+            
+            // Generar un nuevo token de acceso con el TTL estándar
+            $newToken = auth()->claims([])->tokenById($userId);
+            
+            return [
+                'username' => $user->getName(),
+                'token' => $newToken
+            ];
+        } catch (BadRequestException $ex) {
+            throw $ex;
+        } catch (Exception $ex) {
+            throw new InternalErrorException("Ha ocurrido un error inesperado al refrescar el token");
         }
     }
     
@@ -127,7 +170,7 @@ class AuthService {
                     '{{UserName}}'=>$user->getName(),
                     '{{Identity}}'=>$identity,
                     '{{RecoveryCode}}'=>$securityCode,
-                    '{{FrontUrl}}'=>config('app.front_url').'/recovery-password'
+                    '{{FrontUrl}}'=>config('app.front_url').'/auth/recovery-password'
                 ]); 
                 $this->emailService->sendEmail("RECOVERY_ACC", $user->getEmail(), $templateData);
                 return [
@@ -167,6 +210,34 @@ class AuthService {
         }
         catch (Exception $ex) {
                 dd($ex);
+            throw new InternalErrorException("Ha ocurrido un error inesperado");
+        }
+    }
+
+    public function resetPassword(string $identity, string $code, string $password): array{
+        try {
+            $userIdentity = base64_decode($identity);
+            $encrypt = Hash::make($password);
+
+            $user = $this->userRepository->verfifyAccountStep($userIdentity, $code,'RECOVERY');
+
+            if ($user === null) {
+                throw new BadRequestException("El código de verificación es inválido o ha expirado.");
+            }
+
+            $state = $this->userStatesRepository->findById($user->getStateId());
+            if (!$state || $state->getCode() !== 'ACTIVE') {
+                throw new BadRequestException("El usuario no se encuentra activo.");
+            }
+
+            $this->userRepository->updatePassword($user->getUserId(), $encrypt);
+
+            return [
+                'result' => true
+            ];
+        } catch (BadRequestException $ex) {
+            throw $ex;
+        } catch (Exception $ex) {
             throw new InternalErrorException("Ha ocurrido un error inesperado");
         }
     }

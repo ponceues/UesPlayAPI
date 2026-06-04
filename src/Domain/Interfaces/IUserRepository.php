@@ -12,7 +12,6 @@ interface IUserRepository {
     function searchByFilter(Filter $filter);
     function countByFilter(Filter $filter):int;
     function updateUser(User $user):User;
-    
     /**
      * <p>Agrega un usuario a la db con codigo de creacion </p>
      * @param string $user
@@ -37,7 +36,15 @@ interface IUserRepository {
      * @return boolean
      */
     function verfifyAccount(string $identity, string $verify_code): ?User;
-
+    /**
+     * <p> Verifica el paso quen que se encuentra la cuenta del usuario, RECOVERY, VERIFY. </p>
+     * @param string $identity
+     * @param string $verify_code
+     * @param string $step
+     * @return boolean
+     */
+    function verfifyAccountStep(string $identity, string $verify_code, string $step): ?User;
+    
     /**
      * <p> Actualiza el password de un usuario </p>
      * @param string $password
