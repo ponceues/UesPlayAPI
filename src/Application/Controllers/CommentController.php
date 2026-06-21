@@ -21,7 +21,9 @@ class CommentController extends Controller
     public function listComments(Request $request, string $resourceId): JsonResponse
     {
         $filter = FilterMapper::fromRequestToEntity($request);
+        $filter->setStatus('PUBLISHED');
         $env = $this->commentService->search($filter, $resourceId);
+        
         return response()->json($env->toArray());
     }
 

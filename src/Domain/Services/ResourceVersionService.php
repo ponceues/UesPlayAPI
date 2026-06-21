@@ -104,7 +104,7 @@ class ResourceVersionService
             
             $dir = "resources/{$area->getCode()}/{$resourceId}/source";
 
-            Storage::disk('s3')->putFileAs($dir, $file, $fileName);
+            Storage::disk('local')->putFileAs($dir, $file, $fileName);
             
             $platformsCol = collect();
             $devicesCol = collect();
@@ -176,8 +176,7 @@ class ResourceVersionService
             $storagePath = "resources/{$area->getCode()}/{$resourceId}/source";
             $filePath = $storagePath . '/' . $version->getFileName();
             
-            // Verificar si el archivo existe en S3
-            if (!Storage::disk('s3')->exists($filePath)) {
+            if (!Storage::disk('local')->exists($filePath)) {
                 throw new NotFoundException('El archivo de la versión no existe.');
             }
             
@@ -186,8 +185,7 @@ class ResourceVersionService
                 $this->resourceRepository->update($resource);
             }
 
-            // Descargar el archivo desde S3
-            return Storage::disk('s3')->download($filePath, $version->getFileName());
+            return Storage::disk('local')->download($filePath, $version->getFileName());
         } catch (NotFoundException $e) {
             throw $e;
         } catch (Exception $e) {

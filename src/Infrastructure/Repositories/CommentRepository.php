@@ -23,6 +23,9 @@ class CommentRepository implements  ICommentRepository
         $query = DB::table($this->table)
             ->where('resource_id', $resourceId)
             ->where('deleted', false);
+        if($filter->getStatus() !== null) {
+            $query->where('status', $filter->getStatus());
+        }
 
         $raw = $query->orderBy('created_at', 'desc')
             ->offset($filter->getPage() * $filter->getPageSize())

@@ -91,7 +91,7 @@ class ResourceService {
 
     private function getFileUrl(string $path): string {
 
-        return Storage::disk('s3')->url($path);
+        return Storage::url($path);
 
     }
     
@@ -472,7 +472,7 @@ class ResourceService {
             $dir = "resources/{$area->getCode()}/{$resourceId}/files";
             $name = $uploadFile->getClientOriginalName();
 
-            $res = Storage::disk('s3')->putFileAs($dir, $uploadFile, $name);
+            $res = Storage::putFileAs($dir, $uploadFile, $name);
             $file->setPath($res);
             $res = $this->resourceFileRepository->create($file);
             return $res;
@@ -484,7 +484,7 @@ class ResourceService {
             throw new BadRequestException('El recurso no existe');
         }
         catch (Exception $ex) {
-            dd($ex);
+            
             throw new InternalErrorException('Ha ocurrido un error inesperado.');
         }
 
@@ -493,10 +493,8 @@ class ResourceService {
     public function removeFile(string $resourceId, string $fileId): void{
         try{
             $file = $this->resourceFileRepository->find($fileId);
-            $storageDisk = Storage::disk('s3');
 
-
-            $storageDisk->delete($file->getPath());
+            Storage::delete($file->getPath());
 
             $this->resourceFileRepository->delete($fileId);
         }
@@ -504,7 +502,6 @@ class ResourceService {
             throw new NotFoundException('El archivo no existe');
         }
         catch (Exception $ex) {
-            dd($ex);
             throw new InternalErrorException('Ha ocurrido un error inesperado.');
         }
     }

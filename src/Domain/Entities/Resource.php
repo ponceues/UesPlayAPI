@@ -10,6 +10,8 @@ class Resource implements Arrayable {
     private string $userId;
     private string $typeId;
     private ?string $areaId;
+    private ?string $mediaTypeId;
+    private ?string $genreId;
     private string $stateId;
     private string $title;
     private string $description;
@@ -29,6 +31,42 @@ class Resource implements Arrayable {
     
 
 
+    /**
+     * @return ?string
+     */
+    public function getMediaTypeId(): ?string
+    {
+        return $this->mediaTypeId;
+    }
+
+    /**
+     * @return ?string
+     */
+    public function getGenreId(): ?string
+    {
+        return $this->genreId;
+    }
+
+    /**
+     * @param ?string $mediaTypeId
+     */
+    public function setMediaTypeId(?string $mediaTypeId): self
+    {
+        $this->mediaTypeId = $mediaTypeId;
+        
+        return $this;
+    }
+
+    /**
+     * @param ?string $genreId
+     */
+    public function setGenreId(?string $genreId): self
+    {
+        $this->genreId = $genreId;
+        
+        return $this;
+    }
+
     public function __construct() {
         $this->dowloadsCount = 0;
         $this->creator = null;
@@ -40,7 +78,11 @@ class Resource implements Arrayable {
         $this->files = collect();
         $this->version = null;
         $this->rating = 0.0;
+        $this->genreId = null;
+        $this->mediaTypeId = null;
     }
+    
+    
     
     public function getResourceId(): string {
         return $this->resourceId;
@@ -210,6 +252,8 @@ class Resource implements Arrayable {
             'typeId'=>$this->getTypeId(),
             'areaId'=>$this->getAreaId(),
             'stateId'=>$this->getStateId(),
+            'mediaTypeId'=> $this->getMediaTypeId(),
+            'genreId'=>$this->getGenreId(),
             'title'=>$this->getTitle(),
             'description'=>$this->getDescription(),
             'downloads'=>$this->getDownloads(),

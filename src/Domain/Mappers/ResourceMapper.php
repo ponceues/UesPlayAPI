@@ -4,6 +4,7 @@ namespace UesPlay\Domain\Mappers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Collection;
 use DateTime;
@@ -29,6 +30,9 @@ class ResourceMapper {
         $entity->setAreaId($raw->area_id);
         $entity->setCreatedAt(new DateTime($raw->created_at));
         $entity->setUpdatedAt(new DateTime($raw->updated_at));
+        $entity->setDownloads($raw->downloads);
+        $entity->setMediaTypeId($raw->media_type_id);
+        $entity->setGenreId($raw->genre_id);
         $entity->setDownloads($raw->downloads);
         return $entity;
     }
@@ -61,6 +65,21 @@ class ResourceMapper {
                 ],
                 'typeId'=>'required|uuid',
                 'areaId'=>'nullable|uuid',
+                'mediaTypeId'=>[
+                    'nullable',
+                    'uuid',
+                    Rule::requiredIf(function() use ($request) {
+                        $code = DB::table('resource_types')
+                            ->where('type_id', $request->input('typeId'))
+                            ->value('code');
+                        return $code === 'MEDIA';
+                    })
+                ],
+                'genreId'=>[
+                    'nullable',
+                    'uuid',
+                    Rule::requiredIf(fn() => $request->filled('mediaTypeId'))
+                ],
                 
             ],
             [
@@ -69,7 +88,12 @@ class ResourceMapper {
                 'title.required'=>'El titulo es requerido',
                 'stateId.uuid'=>'El formato del id del estado es requerido',
                 'typeId.uuid'=>'El formato del tipo de recurso es requerido',
-                'areaId.uuid'=>'El formato id del area es incorrecto'
+                'areaId.uuid'=>'El formato id del area es incorrecto',
+                'mediaTypeId.required'=>'El tipo de medio es requerido cuando el tipo de recurso es MEDIA',
+                'mediaTypeId.uuid'=>'El formato del id del tipo de medio es incorrecto',
+                'genreId.required'=>'El género es requerido cuando se especifica un tipo de medio',
+                'genreId.uuid'=>'El formato del id del género es incorrecto',
+                
             ]
         );
         
@@ -83,7 +107,9 @@ class ResourceMapper {
         $entity->setTitle($request->string('title'));
         $entity->setDescription($request->string('description'));
         $entity->setTypeId($request->string('typeId'));
-        $entity->setAreaId($request->has('areaId') ? $request->string('areaId'):null);
+        $entity->setAreaId($request->has('areaId') ? $request->string('areaId') : null);
+        $entity->setMediaTypeId($request->filled('mediaTypeId') ? $request->string('mediaTypeId') : null);
+        $entity->setGenreId($request->filled('genreId') ? $request->string('genreId') : null);
         
         return $entity;
     }

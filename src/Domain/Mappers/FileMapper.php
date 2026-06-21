@@ -68,7 +68,7 @@ class FileMapper
                 $validate = Validator::make(
                     $request->all(),
                     [
-                        'file'=>'required|file|mimes:jpg,jpeg,png|max:5000|dimensions:max_width=300,max_height=300',
+                        'file'=>'required|file|mimes:jpg,jpeg,png|max:5000|dimensions:max_width=900,max_height=900',
                     ]
                 );
                 $file = $request->file('file');
@@ -98,8 +98,8 @@ class FileMapper
                         throw new BadRequestException($validate->errors()->first());
                     }
                     
-                    if($width/2 !== $height){
-                        throw new BadRequestException('la imagen debe tener una relación de aspecto 2:1');
+                    if($width/2 !== $height && ($width * 3) === ($height * 2)){
+                        throw new BadRequestException('la imagen debe tener una relación de aspecto 2:1 o 2:3');
                     }
                     
                 }else if($entity->getType() === 'video'){

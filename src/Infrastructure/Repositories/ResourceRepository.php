@@ -116,6 +116,8 @@ class ResourceRepository implements IResourceRepository {
                 'resource_id'=>$resource->getResourceId(),
                 'user_id'=>$resource->getUserId(),
                 'state_id'=>$resource->getStateId(),
+                'media_type_id'=>$resource->getMediaTypeId(),
+                'genre_id'=>$resource->getGenreId(),
                 'title'=>$resource->getTitle(),
                 'description'=>$resource->getDescription(),
                 'deleted'=>false,
@@ -135,7 +137,6 @@ class ResourceRepository implements IResourceRepository {
                 'title'=>$resource->getTitle(),
                 'description'=>$resource->getDescription(),
                 'area_id'=>$resource->getAreaId(),
-                'downloads'=>$resource->getDownloads(),
                 'updated_at'=>$resource->getUpdatedAt()
             ]);
         return $this->findOrFail($resource->getResourceId());
